@@ -1,0 +1,41 @@
+import { Prize } from '../types/prize';
+
+export const mockPrizes: Prize[] = [
+  {
+    id: 'prz-001',
+    raffleId: 'raf-004',
+    raffleName: 'Sorteo Matutino Flash',
+    winningNumber: '4587',
+    prizeDescription: 'Primer Premio C$ 10,000',
+    amount: 10000,
+    status: 'VERIFIED',
+    winnerSaleId: 'sale-00121',
+    winnerCode: 'VNT-000121',
+    winnerSellerName: 'Carlos Martínez',
+    createdAt: '2026-08-12T09:05:00Z',
+  },
+  {
+    id: 'prz-002',
+    raffleId: 'raf-001',
+    raffleName: 'Gran Sorteo Nocturno',
+    winningNumber: 'Por definir',
+    prizeDescription: 'Premio Mayor C$ 50,000',
+    amount: 50000,
+    status: 'PENDING',
+    createdAt: '2026-08-01T08:00:00Z',
+  },
+  {
+    id: 'prz-003',
+    raffleId: 'raf-005',
+    raffleName: 'Sorteo Especial de Verano',
+    winningNumber: '7721',
+    prizeDescription: 'Premio Mayor C$ 30,000',
+    amount: 30000,
+    status: 'PAID',
+    winnerSaleId: 'sale-00098',
+    winnerCode: 'VNT-000098',
+    winnerSellerName: 'María López',
+    paidAt: '2026-08-05T14:30:00Z',
+    createdAt: '2026-08-04T18:00:00Z',
+  },
+];
