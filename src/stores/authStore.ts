@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from '../types/user';
 import { authService } from '../services/authService';
+import { supabase } from '../../server/config/supabase';
 
 interface AuthState {
   user: User | null;
@@ -10,15 +10,12 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
 
-  login: (emailOrUsername: string, pass: string) => Promise<User>;
+  login: (email: string, pass: string) => Promise<User>;
   logout: () => Promise<void>;
   loadSession: () => Promise<void>;
   updateUser: (data: Partial<User>) => void;
   clearError: () => void;
 }
-
-const STORAGE_KEY_USER = '@sorteo_user';
-const STORAGE_KEY_TOKEN = '@sorteo_token';
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
@@ -27,12 +24,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: true,
   error: null,
 
-  login: async (emailOrUsername, pass) => {
-    set({ isLoading: true, error: null });
+  login: async (email, pass) => {
+
+    set({
+      isLoading: true,
+      error: null,
+    });
+
     try {
-      const res = await authService.login(emailOrUsername, pass);
-      await AsyncStorage.setItem(STORAGE_KEY_USER, JSON.stringify(res.user));
-      await AsyncStorage.setItem(STORAGE_KEY_TOKEN, res.token);
+
+      const res = await authService.login(
+        email,
+        pass
+      );
 
       set({
         user: res.user,
@@ -43,21 +47,41 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
 
       return res.user;
+
     } catch (err: any) {
-      const errorMsg = err?.message || 'Error al iniciar sesión';
-      set({ isLoading: false, error: errorMsg });
+
+      const errorMsg =
+        err?.message ||
+        'Error al iniciar sesión';
+
+      set({
+        isLoading: false,
+        error: errorMsg,
+      });
+
       throw new Error(errorMsg);
     }
   },
 
   logout: async () => {
-    set({ isLoading: true });
+
+    set({
+      isLoading: true,
+    });
+
     try {
-      await AsyncStorage.removeItem(STORAGE_KEY_USER);
-      await AsyncStorage.removeItem(STORAGE_KEY_TOKEN);
-    } catch (e) {
-      console.warn('Failed to clear async storage auth session', e);
+
+      await supabase.auth.signOut();
+
+    } catch (error) {
+
+      console.warn(
+        'Error al cerrar sesión:',
+        error
+      );
+
     } finally {
+
       set({
         user: null,
         token: null,
@@ -69,34 +93,83 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   loadSession: async () => {
-    set({ isLoading: true });
-    try {
-      const storedUser = await AsyncStorage.getItem(STORAGE_KEY_USER);
-      const storedToken = await AsyncStorage.getItem(STORAGE_KEY_TOKEN);
 
-      if (storedUser && storedToken) {
+    set({
+      isLoading: true,
+    });
+
+    try {
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.user) {
+
         set({
-          user: JSON.parse(storedUser),
-          token: storedToken,
-          isAuthenticated: true,
+          user: null,
+          token: null,
+          isAuthenticated: false,
           isLoading: false,
         });
-      } else {
-        set({ user: null, token: null, isAuthenticated: false, isLoading: false });
+
+        return;
       }
-    } catch (e) {
-      set({ user: null, token: null, isAuthenticated: false, isLoading: false });
+
+      const user =
+        await authService.getCurrentUser(
+          session.user.id
+        );
+
+      if (!user) {
+
+        await supabase.auth.signOut();
+
+        set({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          isLoading: false,
+        });
+
+        return;
+      }
+
+      set({
+        user,
+        token: session.access_token,
+        isAuthenticated: true,
+        isLoading: false,
+      });
+
+    } catch (error) {
+
+      set({
+        user: null,
+        token: null,
+        isAuthenticated: false,
+        isLoading: false,
+      });
     }
   },
 
   updateUser: (data) => {
+
     const currentUser = get().user;
-    if (currentUser) {
-      const updated = { ...currentUser, ...data };
-      set({ user: updated });
-      AsyncStorage.setItem(STORAGE_KEY_USER, JSON.stringify(updated));
-    }
+
+    if (!currentUser) return;
+
+    set({
+      user: {
+        ...currentUser,
+        ...data,
+      },
+    });
   },
 
-  clearError: () => set({ error: null }),
+  clearError: () => {
+    set({
+      error: null,
+    });
+  },
 }));

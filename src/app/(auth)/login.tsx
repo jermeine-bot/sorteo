@@ -21,7 +21,7 @@ import { Clover, Lock, User, ShieldCheck, Tag } from 'lucide-react-native';
 
 const loginSchema = z.object({
   username: z.string().min(1, 'Ingresa tu usuario o correo'),
-  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+  password: z.string().min(4, 'La contraseña debe tener al menos 4 caracteres'),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -102,7 +102,7 @@ export default function LoginScreen() {
               name="username"
               render={({ field: { onChange, value } }) => (
                 <AppInput
-                  label="Usuario o Correo"
+                  label="Correo electronico"
                   placeholder="admin@sorteo.com"
                   autoCapitalize="none"
                   leftIcon={<User size={18} color={colors.textSecondary} />}
@@ -145,7 +145,7 @@ export default function LoginScreen() {
             />
 
             {/* Quick Demo Access Pills */}
-            <View style={styles.mockSection}>
+            {/* <View style={styles.mockSection}>
               <Text style={styles.mockLabel}>Acceso rápido para pruebas:</Text>
               <View style={styles.pillsRow}>
                 <TouchableOpacity
@@ -164,7 +164,7 @@ export default function LoginScreen() {
                   <Text style={styles.pillSellerText}>Vendedor Demo</Text>
                 </TouchableOpacity>
               </View>
-            </View>
+            </View> */}
           </View>
 
          
