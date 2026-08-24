@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, FlatList, TouchableOpacity, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppHeader } from '../../components/ui/AppHeader';
@@ -13,9 +13,22 @@ import { usePrizeStore } from '../../stores/prizeStore';
 import { colors, typography, spacing } from '../../theme';
 import { Plus, Trophy } from 'lucide-react-native';
 import { Raffle } from '../../types/raffle';
+import { RaffleFormData } from '../../components/modals/RaffleModal';
 
 export default function RafflesScreen() {
-  const { raffles, createRaffle, updateRaffle } = useRaffleStore();
+  const {
+  raffles,
+  isLoading,
+  error,
+  fetchRaffles,
+  createRaffle,
+  updateRaffle,
+  } = useRaffleStore();
+
+  useEffect(() => {
+  fetchRaffles();
+  }, []);
+
   const { registerWinner } = usePrizeStore();
 
   const [createModal, setCreateModal] = useState(false);
@@ -29,17 +42,29 @@ export default function RafflesScreen() {
     return r.status === statusFilter;
   });
 
-  const handleCreateOrUpdate = async (data: any) => {
-    if (selectedRaffle) {
-      await updateRaffle(selectedRaffle.id, data);
-      setToastMsg('¡Sorteo actualizado!');
-    } else {
-      await createRaffle({
-        ...data,
-        status: 'ACTIVE',
-        totalTickets: 10000,
-      });
-      setToastMsg('¡Nuevo sorteo creado y activado!');
+  const handleCreateOrUpdate = async (
+  data: RaffleFormData
+  ) => {
+    try {
+      if (selectedRaffle) {
+        await updateRaffle(
+          selectedRaffle.id,
+          data
+        );
+        setToastMsg(
+          '¡Sorteo actualizado!'
+        );
+      } else {
+        await createRaffle(data);
+        setToastMsg(
+          '¡Nuevo sorteo creado!'
+        );
+      }
+    } catch (error) {
+      console.error(
+        'Error guardando sorteo:',
+        error
+      );
     }
   };
 
@@ -89,6 +114,28 @@ export default function RafflesScreen() {
         type="success"
         onDismiss={() => setToastMsg('')}
       />
+
+      {isLoading && raffles.length === 0 && (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>
+            Cargando sorteos...
+          </Text>
+        </View>
+      )}
+
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>
+            {error}
+          </Text>
+
+          <AppButton
+            title="Reintentar"
+            onPress={fetchRaffles}
+            size="sm"
+          />
+        </View>
+      )}
 
       <RaffleModal
         visible={createModal}
@@ -230,5 +277,31 @@ const styles = StyleSheet.create({
   cardActions: {
     flexDirection: 'row',
     gap: spacing.sm,
+  },
+  
+  loadingContainer: {
+  paddingVertical: spacing.xl,
+  alignItems: 'center',
+  },
+
+  loadingText: {
+    ...typography.body,
+    color: colors.textSecondary,
+  },
+
+  errorContainer: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    padding: spacing.md,
+    borderRadius: spacing.sm,
+    backgroundColor: colors.errorBg,
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+
+  errorText: {
+    ...typography.body,
+    color: colors.error,
+    textAlign: 'center',
   },
 });

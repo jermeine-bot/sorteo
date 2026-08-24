@@ -21039,3 +21039,23 @@
 {"_e":"metro:client_log","_t":1787263838547,"level":"log","data":["SUPABASE KEY:","CLAVE DETECTADA"]}
 {"_e":"metro:client_log","_t":1787263838719,"level":"warn","data":["\"shadow*\" style props are deprecated. Use \"boxShadow\"."]}
 {"_e":"metro:client_log","_t":1787263838753,"level":"warn","data":["props.pointerEvents is deprecated. Use style.pointerEvents"]}
+{"_e":"root:init","_t":1787527797239,"format":"v0-jsonl","version":"57.0.14"}
+{"_e":"env:mode","_t":1787527797307,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1787527797409,"mode":"development","files":["../..\\..\\.env"],"env":{"EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY":"sb_publishable_0cWL8rZcoTKtVTj54-tkgw_8Vm69hRP","EXPO_PUBLIC_SUPABASE_URL":"https://apexlbtxgewjesqewdtw.supabase.co"}}
+{"_e":"devserver:start","_t":1787527826355,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../..\\..\\src\\app","serverComponents":false,"serverActions":false,"serverRendering":true,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1787527852944,"serverRoot":"../..\\..","projectRoot":"../..\\..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":true,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"expo:dev-tools-plugin:load","_t":1787527865677,"plugins":[]}
+{"_e":"metro:instantiate","_t":1787527943180,"atlas":false,"workers":3,"host":"::","port":8081}
+{"_e":"root:init","_t":1787528250368,"format":"v0-jsonl","version":"57.0.14"}
+{"_e":"env:mode","_t":1787528250371,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1787528250385,"mode":"development","files":["../..\\..\\.env"],"env":{"EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY":"sb_publishable_0cWL8rZcoTKtVTj54-tkgw_8Vm69hRP","EXPO_PUBLIC_SUPABASE_URL":"https://apexlbtxgewjesqewdtw.supabase.co"}}
+{"_e":"devserver:start","_t":1787528252335,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../..\\..\\src\\app","serverComponents":false,"serverActions":false,"serverRendering":true,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1787528253985,"serverRoot":"../..\\..","projectRoot":"../..\\..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":true,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"expo:dev-tools-plugin:load","_t":1787528255278,"plugins":[]}
+{"_e":"metro:instantiate","_t":1787528292433,"atlas":false,"workers":3,"host":"::","port":8081}
+{"_e":"root:init","_t":1787530765458,"format":"v0-jsonl","version":"57.0.14"}
+{"_e":"env:mode","_t":1787530765465,"nodeEnv":"development","babelEnv":"development","mode":"development"}
+{"_e":"env:load","_t":1787530765557,"mode":"development","files":["../..\\..\\.env"],"env":{"EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY":"sb_publishable_0cWL8rZcoTKtVTj54-tkgw_8Vm69hRP","EXPO_PUBLIC_SUPABASE_URL":"https://apexlbtxgewjesqewdtw.supabase.co"}}
+{"_e":"devserver:start","_t":1787530782455,"mode":"development","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../..\\..\\src\\app","serverComponents":false,"serverActions":false,"serverRendering":true,"apiRoutes":false,"exporting":false}
+{"_e":"metro:config","_t":1787530796561,"serverRoot":"../..\\..","projectRoot":"../..\\..","exporting":false,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":true,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
+{"_e":"expo:dev-tools-plugin:load","_t":1787530802983,"plugins":[]}

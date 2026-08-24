@@ -171,6 +171,24 @@ export const RaffleModal: React.FC<RaffleModalProps> = ({
                       )}
                     />
                   </View>
+                  
+                  {/* input for price */}
+                  <View style={styles.col}>
+                    <Controller
+                      control={control}
+                      name="ticketPrice"
+                      render={({ field: { onChange, value } }) => (
+                        <AppInput
+                          label="Precio del Boleto (C$)"
+                          placeholder="10"
+                          keyboardType="numeric"
+                          value={String(value ?? '')}
+                          onChangeText={onChange}
+                          error={errors.ticketPrice?.message}
+                        />
+                      )}
+                    />
+                  </View>
 
                   <View style={styles.col}>
                     <Controller
