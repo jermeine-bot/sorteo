@@ -99,7 +99,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
 
     try {
-
       const {
         data: { session },
       } = await supabase.auth.getSession();

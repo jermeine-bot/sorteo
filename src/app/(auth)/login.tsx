@@ -49,7 +49,7 @@ export default function LoginScreen() {
       const user = await login(data.username, data.password);
       if (user.role === 'ADMIN') {
         router.replace('/(admin)/dashboard');
-      } else {
+      } else if(user.role === 'SELLER'){
         router.replace('/(seller)/dashboard');
       }
     } catch (e) {

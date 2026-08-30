@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, Modal, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -42,10 +42,20 @@ export const WinnerModal: React.FC<WinnerModalProps> = ({
     resolver: zodResolver(winnerSchema),
     defaultValues: {
       winningNumber: '',
-      prizeDescription: raffle?.mainPrize || 'Premio Mayor',
-      amount: raffle?.prizeAmount || 50000,
+      prizeDescription: '',
+      amount: 0,
     },
   });
+
+  useEffect(() => {
+  if (raffle) {
+    reset({
+      winningNumber: '',
+      prizeDescription: raffle.mainPrize || 'Premio Mayor',
+      amount: raffle.prizeAmount || 0,
+    });
+  }
+  }, [raffle, reset]);
 
   const onFormSubmit = async (data: WinnerFormData) => {
     await onSubmit(data);
