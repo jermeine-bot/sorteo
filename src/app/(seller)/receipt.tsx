@@ -7,15 +7,27 @@ import { AppButton } from '../../components/ui/AppButton';
 import { MoneyText } from '../../components/ui/MoneyText';
 import { Toast } from '../../components/feedback/Toast';
 import { useSaleStore } from '../../stores/saleStore';
+import { usePrinterStore } from '../../stores/printerStore';
 import { colors, typography, borderRadius, spacing, shadows } from '../../theme';
-import { Share2, Printer, PlusCircle, CheckCircle2, Ticket, Clover } from 'lucide-react-native';
+import { Share2, Printer, PlusCircle, CheckCircle2, Ticket, Clover, Bluetooth } from 'lucide-react-native';
 import * as Sharing from 'expo-sharing';
 import * as Print from 'expo-print';
 
 export default function ReceiptScreen() {
   const router = useRouter();
   const { currentReceipt } = useSaleStore();
+  const { connectedDevice, printTicket } = usePrinterStore();
   const [toastMsg, setToastMsg] = useState('');
+
+  const handlePrintBluetooth = async () => {
+    if (!currentReceipt) return;
+    try {
+      await printTicket(currentReceipt);
+      setToastMsg('¡Comprobante enviado a la impresora Bluetooth!');
+    } catch (e: any) {
+      setToastMsg(e?.message || 'Error al imprimir por Bluetooth');
+    }
+  };
 
   if (!currentReceipt) {
     return (
@@ -148,6 +160,16 @@ export default function ReceiptScreen() {
 
         {/* Action Buttons */}
         <View style={styles.actionsContainer}>
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.btBtn]}
+            onPress={handlePrintBluetooth}
+          >
+            <Bluetooth size={20} color="#FFFFFF" />
+            <Text style={styles.btnText}>
+              {connectedDevice ? `Imprimir BT (${connectedDevice.name.split(' ')[0]})` : 'Imprimir Bluetooth'}
+            </Text>
+          </TouchableOpacity>
+
           <View style={styles.secondaryActionsRow}>
             <TouchableOpacity
               style={[styles.actionBtn, styles.shareBtn]}
@@ -162,7 +184,7 @@ export default function ReceiptScreen() {
               onPress={handlePrintTicket}
             >
               <Printer size={20} color={colors.textPrimary} />
-              <Text style={[styles.btnText, { color: colors.textPrimary }]}>Imprimir</Text>
+              <Text style={[styles.btnText, { color: colors.textPrimary }]}>Imprimir PDF</Text>
             </TouchableOpacity>
           </View>
 
@@ -319,6 +341,10 @@ const styles = StyleSheet.create({
   },
   shareBtn: {
     backgroundColor: '#25D366', // WhatsApp Green
+  },
+  btBtn: {
+    backgroundColor: colors.primary,
+    marginBottom: spacing.sm,
   },
   printBtn: {
     backgroundColor: colors.surfaceVariant,

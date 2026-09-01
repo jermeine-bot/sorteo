@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, Text } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, Text, Alert, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppHeader } from '../../components/ui/AppHeader';
 import { RaffleCard } from '../../components/cards/RaffleCard';
@@ -10,23 +10,24 @@ import { Toast } from '../../components/feedback/Toast';
 import { EmptyState } from '../../components/feedback/EmptyState';
 import { useRaffleStore } from '../../stores/raffleStore';
 import { usePrizeStore } from '../../stores/prizeStore';
-import { colors, typography, spacing } from '../../theme';
-import { Plus, Trophy } from 'lucide-react-native';
+import { colors, typography, spacing, borderRadius } from '../../theme';
+import { Plus, Trophy, AlertTriangle } from 'lucide-react-native';
 import { Raffle } from '../../types/raffle';
 import { RaffleFormData } from '../../components/modals/RaffleModal';
 
 export default function RafflesScreen() {
   const {
-  raffles,
-  isLoading,
-  error,
-  fetchRaffles,
-  createRaffle,
-  updateRaffle,
+    raffles,
+    isLoading,
+    error,
+    fetchRaffles,
+    createRaffle,
+    updateRaffle,
+    deleteRaffle,
   } = useRaffleStore();
 
   useEffect(() => {
-  fetchRaffles();
+    fetchRaffles();
   }, []);
 
   const { registerWinner } = usePrizeStore();
@@ -34,6 +35,7 @@ export default function RafflesScreen() {
   const [createModal, setCreateModal] = useState(false);
   const [selectedRaffle, setSelectedRaffle] = useState<Raffle | null>(null);
   const [winnerModalRaffle, setWinnerModalRaffle] = useState<Raffle | null>(null);
+  const [raffleToDelete, setRaffleToDelete] = useState<Raffle | null>(null);
   const [toastMsg, setToastMsg] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'PROGRAMMED' | 'FINISHED'>('ALL');
 
@@ -42,29 +44,30 @@ export default function RafflesScreen() {
     return r.status === statusFilter;
   });
 
-  const handleCreateOrUpdate = async (
-  data: RaffleFormData
-  ) => {
+  const handleCreateOrUpdate = async (data: RaffleFormData) => {
     try {
       if (selectedRaffle) {
-        await updateRaffle(
-          selectedRaffle.id,
-          data
-        );
-        setToastMsg(
-          '¡Sorteo actualizado!'
-        );
+        await updateRaffle(selectedRaffle.id, data);
+        setToastMsg('¡Sorteo actualizado correctamente!');
       } else {
         await createRaffle(data);
-        setToastMsg(
-          '¡Nuevo sorteo creado!'
-        );
+        setToastMsg('¡Nuevo sorteo creado con éxito!');
       }
-    } catch (error) {
-      console.error(
-        'Error guardando sorteo:',
-        error
-      );
+    } catch (error: any) {
+      console.error('Error guardando sorteo:', error);
+      setToastMsg(error?.message || 'Error al guardar el sorteo');
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!raffleToDelete) return;
+    try {
+      await deleteRaffle(raffleToDelete.id);
+      setToastMsg(`Sorteo #${raffleToDelete.raffleNumber || raffleToDelete.name} eliminado.`);
+      setRaffleToDelete(null);
+    } catch (err: any) {
+      setToastMsg(err?.message || 'Error al eliminar sorteo');
+      setRaffleToDelete(null);
     }
   };
 
@@ -117,23 +120,14 @@ export default function RafflesScreen() {
 
       {isLoading && raffles.length === 0 && (
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>
-            Cargando sorteos...
-          </Text>
+          <Text style={styles.loadingText}>Cargando sorteos...</Text>
         </View>
       )}
 
       {error && (
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>
-            {error}
-          </Text>
-
-          <AppButton
-            title="Reintentar"
-            onPress={fetchRaffles}
-            size="sm"
-          />
+          <Text style={styles.errorText}>{error}</Text>
+          <AppButton title="Reintentar" onPress={fetchRaffles} size="sm" />
         </View>
       )}
 
@@ -150,6 +144,41 @@ export default function RafflesScreen() {
         onClose={() => setWinnerModalRaffle(null)}
         onSubmit={handleRegisterWinner}
       />
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        transparent
+        visible={!!raffleToDelete}
+        animationType="fade"
+        onRequestClose={() => setRaffleToDelete(null)}
+      >
+        <View style={styles.confirmOverlay}>
+          <View style={styles.confirmBox}>
+            <View style={styles.iconCircle}>
+              <AlertTriangle size={28} color={colors.error} />
+            </View>
+            <Text style={styles.confirmTitle}>¿Eliminar Sorteo?</Text>
+            <Text style={styles.confirmDesc}>
+              Esta acción eliminará de forma permanente el sorteo "{raffleToDelete?.name}" ({raffleToDelete?.raffleNumber}). Esta acción no se puede deshacer.
+            </Text>
+
+            <View style={styles.confirmActions}>
+              <AppButton
+                title="Cancelar"
+                variant="ghost"
+                onPress={() => setRaffleToDelete(null)}
+                style={{ flex: 1 }}
+              />
+              <AppButton
+                title="Sí, Eliminar"
+                variant="primary"
+                onPress={handleDeleteConfirm}
+                style={{ flex: 1, backgroundColor: colors.error }}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Filter Tabs */}
       <View style={styles.filterRow}>
@@ -185,15 +214,16 @@ export default function RafflesScreen() {
         renderItem={({ item }) => (
           <RaffleCard
             raffle={item}
-            onPress={() => {
+            onEdit={() => {
               setSelectedRaffle(item);
               setCreateModal(true);
             }}
+            onDelete={() => setRaffleToDelete(item)}
             actionButtons={
               <View style={styles.cardActions}>
                 {item.status === 'PROGRAMMED' && (
                   <AppButton
-                    title="Activar Sorteo"
+                    title="Activar"
                     onPress={() => handleStatusChange(item, 'ACTIVE')}
                     variant="secondary"
                     size="sm"
@@ -201,7 +231,7 @@ export default function RafflesScreen() {
                 )}
                 {item.status === 'ACTIVE' && (
                   <AppButton
-                    title="Registrar Ganador"
+                    title="Ganador"
                     onPress={() => setWinnerModalRaffle(item)}
                     variant="primary"
                     size="sm"
@@ -276,19 +306,16 @@ const styles = StyleSheet.create({
   },
   cardActions: {
     flexDirection: 'row',
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
-  
   loadingContainer: {
-  paddingVertical: spacing.xl,
-  alignItems: 'center',
+    paddingVertical: spacing.xl,
+    alignItems: 'center',
   },
-
   loadingText: {
     ...typography.body,
     color: colors.textSecondary,
   },
-
   errorContainer: {
     marginHorizontal: spacing.lg,
     marginBottom: spacing.md,
@@ -298,10 +325,49 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-
   errorText: {
     ...typography.body,
     color: colors.error,
     textAlign: 'center',
+  },
+  confirmOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+  confirmBox: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.xl,
+    width: '100%',
+    maxWidth: 380,
+    alignItems: 'center',
+  },
+  iconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: colors.errorBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  confirmTitle: {
+    ...typography.h3,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  confirmDesc: {
+    ...typography.body,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+  },
+  confirmActions: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    width: '100%',
   },
 });

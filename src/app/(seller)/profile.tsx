@@ -8,17 +8,21 @@ import { AppButton } from '../../components/ui/AppButton';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { MoneyText } from '../../components/ui/MoneyText';
 import { ChangePasswordModal } from '../../components/modals/ChangePasswordModal';
+import { PrinterModal } from '../../components/modals/PrinterModal';
 import { ConfirmDialog } from '../../components/feedback/ConfirmDialog';
 import { Toast } from '../../components/feedback/Toast';
 import { useAuthStore } from '../../stores/authStore';
+import { usePrinterStore } from '../../stores/printerStore';
 import { colors, typography, spacing } from '../../theme';
-import { User as UserIcon, Mail, Phone, Percent, Lock, LogOut, Award } from 'lucide-react-native';
+import { User as UserIcon, Mail, Phone, Lock, LogOut, Printer } from 'lucide-react-native';
 
 export default function SellerProfileScreen() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
+  const { connectedDevice } = usePrinterStore();
 
   const [passwordModal, setPasswordModal] = useState(false);
+  const [printerModal, setPrinterModal] = useState(false);
   const [logoutDialog, setLogoutDialog] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
 
@@ -40,6 +44,11 @@ export default function SellerProfileScreen() {
         message={toastMsg}
         type="success"
         onDismiss={() => setToastMsg('')}
+      />
+
+      <PrinterModal
+        visible={printerModal}
+        onClose={() => setPrinterModal(false)}
       />
 
       <ChangePasswordModal
@@ -109,9 +118,16 @@ export default function SellerProfileScreen() {
           </View>
         </AppCard>
 
-        {/* Security & Logout Actions */}
+        {/* Hardware & Security Actions */}
         <AppCard style={styles.infoCard}>
-          <Text style={styles.cardTitle}>Cuenta y Seguridad</Text>
+          <Text style={styles.cardTitle}>Dispositivos y Seguridad</Text>
+          <AppButton
+            title={connectedDevice ? `Impresora: ${connectedDevice.name}` : "Configurar Impresora Bluetooth"}
+            onPress={() => setPrinterModal(true)}
+            variant="secondary"
+            icon={<Printer size={16} color={colors.primary} />}
+            style={styles.btn}
+          />
           <AppButton
             title="Cambiar Contraseña"
             onPress={() => setPasswordModal(true)}

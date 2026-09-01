@@ -5,15 +5,18 @@ import { AppHeader } from '../../components/ui/AppHeader';
 import { AppInput } from '../../components/ui/AppInput';
 import { SaleCard } from '../../components/cards/SaleCard';
 import { StatCard } from '../../components/cards/StatCard';
+import { ReceiptModal } from '../../components/modals/ReceiptModal';
 import { EmptyState } from '../../components/feedback/EmptyState';
 import { useSaleStore } from '../../stores/saleStore';
 import { colors, typography, spacing } from '../../theme';
 import { Search, DollarSign, Ticket, Percent, TrendingUp } from 'lucide-react-native';
 import { formatCurrency } from '../../utils/currency';
+import { Sale } from '../../types/sale';
 
 export default function AdminSalesScreen() {
   const { sales } = useSaleStore();
   const [search, setSearch] = useState('');
+  const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
 
   const filteredSales = sales.filter((s) => {
     const q = search.toLowerCase();
@@ -35,6 +38,13 @@ export default function AdminSalesScreen() {
       <AppHeader title="Auditoría de Ventas" subtitle="Monitoreo de todas las transacciones" />
 
       <View style={styles.container}>
+        {/* Receipt Voucher Viewer Modal */}
+        <ReceiptModal
+          visible={!!selectedSale}
+          sale={selectedSale}
+          onClose={() => setSelectedSale(null)}
+        />
+
         {/* KPI Banner */}
         <View style={styles.kpiGrid}>
           <StatCard
@@ -81,7 +91,13 @@ export default function AdminSalesScreen() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => <SaleCard sale={item} showSeller />}
+          renderItem={({ item }) => (
+            <SaleCard
+              sale={item}
+              showSeller
+              onPress={() => setSelectedSale(item)}
+            />
+          )}
           ListEmptyComponent={
             <EmptyState
               title="No hay ventas registradas"
