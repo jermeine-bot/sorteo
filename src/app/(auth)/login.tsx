@@ -43,6 +43,7 @@ export default function LoginScreen() {
     },
   });
 
+  // Redireccionamiento por rol
   const onSubmit = async (data: LoginFormData) => {
     try {
       clearError();
