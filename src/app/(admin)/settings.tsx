@@ -1,16 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppHeader } from '../../components/ui/AppHeader';
 import { AppCard } from '../../components/ui/AppCard';
+import { PrinterModal } from '../../components/modals/PrinterModal';
 import { useAuthStore } from '../../stores/authStore';
+import { usePrinterStore } from '../../stores/printerStore';
 import { colors, typography, spacing } from '../../theme';
-import { Trophy, BarChart3, User, LogOut, ChevronRight } from 'lucide-react-native';
+import { Trophy, BarChart3, User, LogOut, ChevronRight, Printer } from 'lucide-react-native';
 
 export default function AdminSettingsScreen() {
   const router = useRouter();
   const { logout, user } = useAuthStore();
+  const { connectedDevice } = usePrinterStore();
+  const [printerModalVisible, setPrinterModalVisible] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -18,6 +22,14 @@ export default function AdminSettingsScreen() {
   };
 
   const menuItems = [
+    {
+      title: 'Impresora Bluetooth',
+      subtitle: connectedDevice
+        ? `Conectada: ${connectedDevice.name}`
+        : 'Vincular y configurar impresora térmica de tickets',
+      icon: <Printer size={20} color={colors.primary} />,
+      onPress: () => setPrinterModalVisible(true),
+    },
     {
       title: 'Módulo de Premios y Ganadores',
       subtitle: 'Registrar números ganadores y realizar pagos',
@@ -41,6 +53,11 @@ export default function AdminSettingsScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <AppHeader title="Más Opciones" subtitle="Ajustes y herramientas adicionales" />
+
+      <PrinterModal
+        visible={printerModalVisible}
+        onClose={() => setPrinterModalVisible(false)}
+      />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Admin info badge */}

@@ -126,7 +126,7 @@ export default function NewSaleScreen() {
                   onPress={() => setSelectedRaffleId(r.id)}
                 >
                   <Text style={[styles.raffleChipName, isSelected && styles.textSelected]}>
-                    {r.name}
+                    {r.raffleNumber ? `[${r.raffleNumber}] ` : ''}{r.name}
                   </Text>
                   <Text style={[styles.raffleChipTime, isSelected && styles.textSelectedSub]}>
                     Sorteo: {r.drawTime}

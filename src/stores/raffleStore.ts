@@ -12,7 +12,7 @@ interface RaffleState {
   createRaffle: (
     raffleData: Omit<
       Raffle,
-      'id' | 'createdAt' | 'totalSold' | 'totalTickets' | 'winningNumber' | 'status'
+      'id' | 'createdAt' | 'totalSold' | 'winningNumber' | 'status'
     >
   ) => Promise<Raffle>;
 
@@ -20,6 +20,8 @@ interface RaffleState {
     id: string,
     updates: Partial<Raffle>
   ) => Promise<void>;
+
+  deleteRaffle: (id: string) => Promise<void>;
 
   getActiveRaffle: () => Raffle | undefined;
 }
@@ -126,6 +128,32 @@ export const useRaffleStore = create<RaffleState>((set, get) => ({
         error:
           err?.message ||
           'Error al actualizar sorteo.',
+      });
+
+      throw err;
+    }
+  },
+
+  // Eliminar sorteo
+  deleteRaffle: async (id) => {
+    set({
+      isLoading: true,
+      error: null,
+    });
+
+    try {
+      await raffleService.deleteRaffle(id);
+
+      set((state) => ({
+        raffles: state.raffles.filter((raffle) => raffle.id !== id),
+        isLoading: false,
+      }));
+    } catch (err: any) {
+      console.error('Error eliminando sorteo:', err);
+
+      set({
+        isLoading: false,
+        error: err?.message || 'Error al eliminar sorteo.',
       });
 
       throw err;

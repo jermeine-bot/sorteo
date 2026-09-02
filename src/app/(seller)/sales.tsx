@@ -4,11 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppHeader } from '../../components/ui/AppHeader';
 import { AppInput } from '../../components/ui/AppInput';
 import { SaleCard } from '../../components/cards/SaleCard';
+import { ReceiptModal } from '../../components/modals/ReceiptModal';
 import { EmptyState } from '../../components/feedback/EmptyState';
 import { useAuthStore } from '../../stores/authStore';
 import { useSaleStore } from '../../stores/saleStore';
 import { colors, typography, spacing } from '../../theme';
 import { Search } from 'lucide-react-native';
+import { Sale } from '../../types/sale';
 
 type TimeFilter = 'TODAY' | 'YESTERDAY' | 'WEEK' | 'ALL';
 
@@ -18,6 +20,7 @@ export default function SellerSalesScreen() {
 
   const [filter, setFilter] = useState<TimeFilter>('TODAY');
   const [search, setSearch] = useState('');
+  const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
 
   // Strictly fetch ONLY authenticated seller's sales
   const sellerSales = user ? getSalesBySeller(user.id) : [];
@@ -57,6 +60,13 @@ export default function SellerSalesScreen() {
       />
 
       <View style={styles.container}>
+        {/* Receipt Modal for viewing / printing any voucher */}
+        <ReceiptModal
+          visible={!!selectedSale}
+          sale={selectedSale}
+          onClose={() => setSelectedSale(null)}
+        />
+
         {/* Time Filter Chips */}
         <View style={styles.filterRow}>
           {(['TODAY', 'YESTERDAY', 'WEEK', 'ALL'] as const).map((f) => (
@@ -92,7 +102,13 @@ export default function SellerSalesScreen() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => <SaleCard sale={item} showSeller={false} />}
+          renderItem={({ item }) => (
+            <SaleCard
+              sale={item}
+              showSeller={false}
+              onPress={() => setSelectedSale(item)}
+            />
+          )}
           ListEmptyComponent={
             <EmptyState
               title="Sin ventas registradas"

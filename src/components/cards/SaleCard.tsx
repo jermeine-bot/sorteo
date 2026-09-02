@@ -25,7 +25,9 @@ export const SaleCard: React.FC<SaleCardProps> = ({
           <Ticket size={14} color={colors.primary} />
           <Text style={styles.codeText}>{sale.code}</Text>
         </View>
-        <StatusBadge status={sale.status} />
+        <View style={styles.statusGroup}>
+          <StatusBadge status={sale.status} />
+        </View>
       </View>
 
       <View style={styles.contentRow}>
