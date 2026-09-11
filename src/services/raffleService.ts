@@ -131,6 +131,7 @@ export const raffleService = {
   },
 
   // Update Raffle
+
   async updateRaffle(
     id: string,
     updates: Partial<Raffle>
@@ -187,21 +188,39 @@ export const raffleService = {
       updateData.status = updates.status;
     }
 
+    // Boletos ilimitados
     if (updates.isUnlimitedTickets !== undefined) {
-      updateData.is_unlimited_tickets = updates.isUnlimitedTickets;
+      updateData.is_unlimited_tickets =
+        updates.isUnlimitedTickets;
+
+      // Si es ilimitado, la capacidad debe ser 0
+      if (updates.isUnlimitedTickets === true) {
+        updateData.total_tickets = 0;
+      }
+    }
+
+    // Solo actualizar totalTickets cuando NO sea ilimitado
+    if (
+      updates.totalTickets !== undefined &&
+      updates.isUnlimitedTickets !== true
+    ) {
+      updateData.total_tickets = updates.totalTickets;
     }
 
     if (updates.totalSold !== undefined) {
       updateData.total_sold = updates.totalSold;
     }
 
-    if (updates.totalTickets !== undefined) {
-      updateData.total_tickets = updates.totalTickets;
-    }
-
     if (updates.winningNumber !== undefined) {
       updateData.winning_number =
         updates.winningNumber;
+    }
+
+    // Evitar UPDATE vacío
+    if (Object.keys(updateData).length === 0) {
+      throw new Error(
+        'No hay cambios para actualizar.'
+      );
     }
 
     const { data, error } = await supabase
@@ -212,7 +231,6 @@ export const raffleService = {
       .single();
 
     if (error || !data) {
-
       console.error(
         'Error actualizando sorteo:',
         error

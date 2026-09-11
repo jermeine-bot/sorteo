@@ -71,9 +71,29 @@ export default function RafflesScreen() {
     }
   };
 
-  const handleStatusChange = async (raffle: Raffle, newStatus: 'ACTIVE' | 'FINISHED' | 'CANCELLED') => {
-    await updateRaffle(raffle.id, { status: newStatus });
-    setToastMsg(`Sorteo cambiado a ${newStatus}`);
+  const handleStatusChange = async (
+  raffle: Raffle,
+  newStatus: 'ACTIVE' | 'FINISHED' | 'CANCELLED'
+  ) => {
+    try {
+      await updateRaffle(raffle.id, {
+        status: newStatus,
+      });
+
+      setToastMsg(
+        `Sorteo cambiado a ${newStatus}`
+      );
+    } catch (err: any) {
+      console.error(
+        'Error cambiando estado:',
+        err
+      );
+
+      setToastMsg(
+        err?.message ||
+        'No se pudo cambiar el estado del sorteo.'
+      );
+    }
   };
 
   const handleRegisterWinner = async (data: any) => {
@@ -134,7 +154,10 @@ export default function RafflesScreen() {
       <RaffleModal
         visible={createModal}
         raffle={selectedRaffle}
-        onClose={() => setCreateModal(false)}
+        onClose={() => {
+          setCreateModal(false);
+          setSelectedRaffle(null);
+        }}
         onSubmit={handleCreateOrUpdate}
       />
 
