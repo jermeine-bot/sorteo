@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, FlatList, TouchableOpacity, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppHeader } from '../../components/ui/AppHeader';
@@ -12,13 +12,27 @@ import { colors, typography, spacing } from '../../theme';
 import { UserPlus, Search } from 'lucide-react-native';
 import { User } from '../../types/user';
 
+
 export default function SellersScreen() {
-  const { sellers, addSeller, toggleSellerActive } = useSellerStore();
+  const {
+    sellers,
+    fetchSellers,
+    addSeller,
+    updateSeller,
+    changeSellerPassword,
+    toggleSellerActive,
+  } = useSellerStore();
+
   const [search, setSearch] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedSeller, setSelectedSeller] = useState<User | null>(null);
   const [toastMsg, setToastMsg] = useState('');
 
+  useEffect(() => {
+    fetchSellers();
+  }, [fetchSellers]);
+
+  // filtro por nombre, usuario, segundo nombre, etc.
   const filteredSellers = sellers.filter(
     (s) =>
       s.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -26,9 +40,41 @@ export default function SellersScreen() {
       s.username.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleCreateSeller = async (data: any) => {
-    await addSeller(data);
-    setToastMsg(`¡Vendedor ${data.name} creado correctamente!`);
+  // const handleCreateSeller = async (data: any) => {
+  //   await addSeller(data);
+  //   setToastMsg(`¡Vendedor ${data.name} creado correctamente!`);
+  // };
+  const handleSaveSeller = async (data: any) => {
+  if (selectedSeller) {
+    await updateSeller(selectedSeller.id, {
+      name: data.name,
+      lastName: data.lastName,
+      username: data.username,
+      phone: data.phone,
+      commissionPercentage: Number(data.commissionPercentage),
+    });
+
+    if (data.password?.trim()) {
+      await changeSellerPassword(
+        selectedSeller.id,
+        data.password.trim()
+      );
+
+      setToastMsg(
+        `¡Vendedor ${data.name} y contraseña actualizados correctamente!`
+      );
+    } else {
+        setToastMsg(
+          `¡Vendedor ${data.name} actualizado correctamente!`
+        );
+      }
+    } else {
+      await addSeller(data);
+
+      setToastMsg(
+        `¡Vendedor ${data.name} creado correctamente!`
+      );
+    }
   };
 
   const handleToggle = async (seller: User) => {
@@ -65,10 +111,13 @@ export default function SellersScreen() {
       />
 
       <SellerModal
-        visible={modalVisible}
-        seller={selectedSeller}
-        onClose={() => setModalVisible(false)}
-        onSubmit={handleCreateSeller}
+         visible={modalVisible}
+          seller={selectedSeller}
+          onClose={() => {
+            setModalVisible(false);
+            setSelectedSeller(null);
+          }}
+          onSubmit={handleSaveSeller}
       />
 
       <View style={styles.content}>
@@ -99,7 +148,10 @@ export default function SellersScreen() {
               title="No se encontraron vendedores"
               description="Intenta buscar con otro nombre o agrega un nuevo vendedor."
               actionTitle="Agregar Vendedor"
-              onAction={() => setModalVisible(true)}
+              onAction={() => {
+                setSelectedSeller(null);
+                setModalVisible(true);
+              }}
             />
           }
         />

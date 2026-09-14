@@ -1,24 +1,26 @@
-import React from 'react';
-import { View, Text, Modal, StyleSheet, ScrollView, TouchableWithoutFeedback } from 'react-native';
+import React, { useEffect } from 'react';
+import {
+  View,
+  Text,
+  Modal,
+  StyleSheet,
+  ScrollView,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { AppInput } from '../ui/AppInput';
 import { AppButton } from '../ui/AppButton';
 import { User } from '../../types/user';
-import { colors, typography, borderRadius, spacing, shadows } from '../../theme';
+import {
+  colors,
+  typography,
+  borderRadius,
+  spacing,
+  shadows,
+} from '../../theme';
 import { X } from 'lucide-react-native';
-
-const sellerSchema = z.object({
-  name: z.string().min(2, 'El nombre es obligatorio (min 2 caracteres)'),
-  lastName: z.string().min(2, 'El apellido es obligatorio'),
-  username: z.string().min(3, 'El usuario debe tener al menos 3 caracteres'),
-  phone: z.string().min(8, 'El teléfono debe ser válido'),
-  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
-  commissionPercentage: z.coerce.number().min(0, 'Comisión inválida').max(50, 'Máximo 50%'),
-});
-
-export type SellerFormData = z.infer<typeof sellerSchema>;
 
 interface SellerModalProps {
   visible: boolean;
@@ -26,6 +28,40 @@ interface SellerModalProps {
   onClose: () => void;
   onSubmit: (data: SellerFormData) => Promise<void>;
 }
+
+const sellerSchema = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .min(2, 'El nombre es obligatorio (mínimo 2 caracteres)'),
+
+    lastName: z
+      .string()
+      .trim()
+      .min(2, 'El apellido es obligatorio (mínimo 2 caracteres)'),
+
+    username: z
+      .string()
+      .trim()
+      .min(3, 'El usuario debe tener al menos 3 caracteres'),
+
+    phone: z
+      .string()
+      .trim()
+      .min(8, 'El teléfono debe ser válido'),
+
+    password: z.string().optional(),
+
+    commissionPercentage: z.coerce
+      .number({
+        invalid_type_error: 'La comisión debe ser un número',
+      })
+      .min(0, 'Comisión inválida')
+      .max(50, 'Máximo 50%'),
+  });
+
+export type SellerFormData = z.infer<typeof sellerSchema>;
 
 export const SellerModal: React.FC<SellerModalProps> = ({
   visible,
@@ -40,20 +76,61 @@ export const SellerModal: React.FC<SellerModalProps> = ({
     reset,
   } = useForm<SellerFormData>({
     resolver: zodResolver(sellerSchema) as any,
+
     defaultValues: {
-      name: seller?.name || '',
-      lastName: seller?.lastName || '',
-      username: seller?.username || '',
-      phone: seller?.phone || '+505 ',
-      password: '123456',
-      commissionPercentage: seller?.commissionPercentage || 10,
+      name: '',
+      lastName: '',
+      username: '',
+      phone: '+505 ',
+      password: '',
+      commissionPercentage: 10,
     },
   });
 
+  /**
+   * Cargar los datos del vendedor cuando se abre
+   * el modal en modo edición.
+   */
+  useEffect(() => {
+    if (visible) {
+      reset({
+        name: seller?.name ?? '',
+        lastName: seller?.lastName ?? '',
+        username: seller?.username ?? '',
+        phone: seller?.phone ?? '+505 ',
+        password: '',
+        commissionPercentage:
+          seller?.commissionPercentage ?? 10,
+      });
+    }
+  }, [visible, seller, reset]);
+
   const onFormSubmit = async (data: SellerFormData) => {
-    await onSubmit(data);
+  try {
+    const password = data.password?.trim() || '';
+
+    // Al crear un vendedor, la contraseña es obligatoria
+    if (!seller && password.length < 6) {
+      console.error(
+        'La contraseña debe tener al menos 6 caracteres.'
+      );
+      return;
+    }
+
+    // Al editar, la contraseña es opcional.
+    // Si está vacía, no se modificará.
+    const cleanedData = {
+      ...data,
+      password: password || undefined,
+    };
+
+    await onSubmit(cleanedData);
+
     reset();
-    onClose();
+      onClose();
+    } catch (error) {
+      console.error('Error al guardar vendedor:', error);
+    }
   };
 
   return (
@@ -71,10 +148,18 @@ export const SellerModal: React.FC<SellerModalProps> = ({
                 <Text style={styles.title}>
                   {seller ? 'Editar Vendedor' : 'Nuevo Vendedor'}
                 </Text>
-                <X size={22} color={colors.textSecondary} onPress={onClose} />
+
+                <X
+                  size={22}
+                  color={colors.textSecondary}
+                  onPress={onClose}
+                />
               </View>
 
-              <ScrollView showsVerticalScrollIndicator={false}>
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+              >
                 <Controller
                   control={control}
                   name="name"
@@ -138,7 +223,16 @@ export const SellerModal: React.FC<SellerModalProps> = ({
                   name="password"
                   render={({ field: { onChange, value } }) => (
                     <AppInput
-                      label="Contraseña"
+                      label={
+                        seller
+                          ? 'Nueva Contraseña (opcional)'
+                          : 'Contraseña'
+                      }
+                      placeholder={
+                        seller
+                          ? 'Dejar vacío para conservarla'
+                          : 'Mínimo 6 caracteres'
+                      }
                       isPassword
                       value={value}
                       onChangeText={onChange}
@@ -170,6 +264,7 @@ export const SellerModal: React.FC<SellerModalProps> = ({
                   variant="ghost"
                   style={styles.btn}
                 />
+
                 <AppButton
                   title={seller ? 'Guardar' : 'Crear Vendedor'}
                   onPress={handleSubmit(onFormSubmit)}
@@ -191,6 +286,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 23, 42, 0.5)',
     justifyContent: 'flex-end',
   },
+
   content: {
     backgroundColor: colors.surface,
     borderTopLeftRadius: borderRadius.xl,
@@ -199,16 +295,19 @@ const styles = StyleSheet.create({
     maxHeight: '85%',
     ...shadows.elevated,
   },
+
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: spacing.lg,
   },
+
   title: {
     ...typography.h2,
     color: colors.textPrimary,
   },
+
   actions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
@@ -218,7 +317,9 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
+
   btn: {
     flex: 1,
   },
 });
+
