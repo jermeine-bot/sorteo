@@ -116,94 +116,101 @@ export const sellerService = {
     };
   },
 
-  // password 
-  // async changeSellerPassword(
-  // sellerId: string,
-  // newPassword: string
-  // ): Promise<void> {
-  //   console.log(
-  //     'Solicitando cambio de contraseña para vendedor:',
-  //     sellerId
-  //   );
-
-  //   const { data, error } =
-  //     await supabase.functions.invoke(
-  //       'change-seller-password',
-  //       {
-  //         body: {
-  //           sellerId,
-  //           newPassword,
-  //         },
-  //       }
-  //     );
-
-  //   console.log('📦 Respuesta cambio contraseña:', data);
-  //   console.log('❌ Error cambio contraseña:', error);
-
-  //   if (error) {
-  //     throw new Error(
-  //       `No se pudo cambiar la contraseña: ${error.message}`
-  //     );
-  //   }
-
-  //   if (!data?.success) {
-  //     throw new Error(
-  //       data?.message ||
-  //         'No se pudo cambiar la contraseña.'
-  //     );
-  //   }
-  // },
-
   async changeSellerPassword(
   sellerId: string,
   newPassword: string
   ): Promise<void> {
-    console.log(
-      'Solicitando cambio de contraseña para vendedor:',
-      sellerId
+  console.log(
+    'Solicitando cambio de contraseña para vendedor:',
+    sellerId
+  );
+
+  const {
+    data: sessionData,
+  } = await supabase.auth.getSession();
+
+  console.log(
+    '🔐 SESIÓN ANTES DE CAMBIAR PASSWORD:',
+    sessionData.session?.access_token
+      ? 'TOKEN OK'
+      : 'NO HAY TOKEN'
+  );
+
+  console.log(
+    '👤 USUARIO AUTENTICADO:',
+    sessionData.session?.user?.email
+  );
+
+  const { data, error } =
+    await supabase.functions.invoke(
+      'change-seller-password',
+      {
+        body: {
+          sellerId,
+          newPassword,
+        },
+      }
     );
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+  console.log(
+    '📦 Respuesta cambio contraseña:',
+    data
+  );
 
+  console.log(
+    '❌ Error cambio contraseña:',
+    error
+  );
+
+  if (error) {
     console.log(
-      '🔐 SESIÓN ANTES DE CAMBIAR PASSWORD:',
-      session?.access_token ? 'TOKEN OK' : 'SIN TOKEN'
+      '🔴 ERROR NAME:',
+      error.name
     );
 
     console.log(
-      '👤 USUARIO AUTENTICADO:',
-      session?.user?.email ?? 'SIN USUARIO'
+      '🔴 ERROR MESSAGE:',
+      error.message
     );
 
-    const { data, error } =
-      await supabase.functions.invoke(
-        'change-seller-password',
-        {
-          body: {
-            sellerId,
-            newPassword,
-          },
-        }
-      );
+    console.log(
+      '🔴 ERROR CONTEXT:',
+      error.context
+    );
 
-    console.log('📦 Respuesta cambio contraseña:', data);
-    console.log('❌ Error cambio contraseña:', error);
+    // Intentamos leer el cuerpo real que devolvió la Edge Function
+    if (error.context) {
+      try {
+        const responseBody = await error.context.text();
 
-    if (error) {
-      throw new Error(
-        `No se pudo cambiar la contraseña: ${error.message}`
-      );
+        console.log(
+          '🔴 RESPUESTA REAL DE EDGE FUNCTION:',
+          responseBody
+        );
+      } catch (readError) {
+        console.log(
+          '⚠️ No se pudo leer el cuerpo del error:',
+          readError
+        );
+      }
     }
 
-    if (!data?.success) {
-      throw new Error(
-        data?.message ||
-          'No se pudo cambiar la contraseña.'
-      );
-    }
-  },
+    throw new Error(
+      `No se pudo cambiar la contraseña: ${error.message}`
+    );
+  }
+
+  if (!data?.success) {
+    throw new Error(
+      data?.message ||
+        'No se pudo cambiar la contraseña.'
+    );
+  }
+
+  console.log(
+    '✅ Contraseña del vendedor actualizada correctamente'
+  );
+},
 
   async toggleSellerStatus(sellerId: string): Promise<boolean> {
     await new Promise((resolve) => setTimeout(resolve, 200));
