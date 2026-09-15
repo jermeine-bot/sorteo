@@ -50,6 +50,7 @@ export default function SellersScreen() {
       name: data.name,
       lastName: data.lastName,
       username: data.username,
+      email: data.email.trim().toLowerCase(),
       phone: data.phone,
       commissionPercentage: Number(data.commissionPercentage),
     });
@@ -64,10 +65,10 @@ export default function SellersScreen() {
         `¡Vendedor ${data.name} y contraseña actualizados correctamente!`
       );
     } else {
-        setToastMsg(
-          `¡Vendedor ${data.name} actualizado correctamente!`
-        );
-      }
+      setToastMsg(
+        `¡Vendedor ${data.name} actualizado correctamente!`
+      );
+    }
     } else {
       await addSeller(data);
 

@@ -46,6 +46,11 @@ const sellerSchema = z
       .trim()
       .min(3, 'El usuario debe tener al menos 3 caracteres'),
 
+    email: z 
+      .string() 
+      .trim() 
+      .email('Ingresa un correo electrónico válido'),
+
     phone: z
       .string()
       .trim()
@@ -81,6 +86,7 @@ export const SellerModal: React.FC<SellerModalProps> = ({
       name: '',
       lastName: '',
       username: '',
+      email: '',
       phone: '+505 ',
       password: '',
       commissionPercentage: 10,
@@ -97,6 +103,7 @@ export const SellerModal: React.FC<SellerModalProps> = ({
         name: seller?.name ?? '',
         lastName: seller?.lastName ?? '',
         username: seller?.username ?? '',
+        email: seller?.email ?? '',
         phone: seller?.phone ?? '+505 ',
         password: '',
         commissionPercentage:
@@ -121,6 +128,7 @@ export const SellerModal: React.FC<SellerModalProps> = ({
     // Si está vacía, no se modificará.
     const cleanedData = {
       ...data,
+      email: data.email.trim().toLowerCase(),
       password: password || undefined,
     };
 
@@ -202,6 +210,9 @@ export const SellerModal: React.FC<SellerModalProps> = ({
                     />
                   )}
                 />
+
+                {/* NUEVO: Correo electrónico */} 
+                <Controller control={control} name="email" render={({ field: { onChange, value } }) => ( <AppInput label="Correo Electrónico" placeholder="carlos@example.com" keyboardType="email-address" autoCapitalize="none" autoCorrect={false} value={value} onChangeText={onChange} error={errors.email?.message} /> )} />
 
                 <Controller
                   control={control}
