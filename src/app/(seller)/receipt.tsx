@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   shareBtn: {
-    backgroundColor: '#25D366', // WhatsApp Green
+    backgroundColor: '#25D366', 
   },
   btBtn: {
     backgroundColor: colors.primary,

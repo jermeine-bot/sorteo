@@ -4,7 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppHeader } from '../../components/ui/AppHeader';
 import { RaffleCard } from '../../components/cards/RaffleCard';
 import { RaffleModal } from '../../components/modals/RaffleModal';
-import { WinnerModal } from '../../components/modals/WinnerModal';
+import {
+  WinnerModal,
+  WinnerFormData,
+} from '../../components/modals/WinnerModal';
+
 import { AppButton } from '../../components/ui/AppButton';
 import { Toast } from '../../components/feedback/Toast';
 import { EmptyState } from '../../components/feedback/EmptyState';
@@ -96,21 +100,39 @@ export default function RafflesScreen() {
     }
   };
 
-  const handleRegisterWinner = async (data: any) => {
+  const handleRegisterWinner = async (data: WinnerFormData) => {
     if (!winnerModalRaffle) return;
-    await registerWinner(
-      winnerModalRaffle.id,
-      winnerModalRaffle.name,
-      data.winningNumber,
-      data.prizeDescription,
-      data.amount
-    );
-    await updateRaffle(winnerModalRaffle.id, {
-      status: 'FINISHED',
-      winningNumber: data.winningNumber,
-    });
-    setToastMsg(`¡Ganador #${data.winningNumber} registrado y sorteo finalizado!`);
+
+    try {
+      await registerWinner(
+        winnerModalRaffle.id,
+        winnerModalRaffle.name,
+        data.winningNumber,
+        data.prizeDescription,
+        data.amount
+      );
+
+      await updateRaffle(winnerModalRaffle.id, {
+        status: 'FINISHED',
+        winningNumber: data.winningNumber,
+      });
+
+      setToastMsg(
+        `¡Ganador #${data.winningNumber} registrado y sorteo finalizado!`
+      );
+      setWinnerModalRaffle(null);
+
+    } catch (err: any) {
+      console.error('❌ Error registrando ganador:', err);
+
+      setToastMsg(
+        err?.message ||
+        'No se pudo registrar el ganador.'
+      );
+    }
   };
+
+
 
   return (
     <SafeAreaView style={styles.safeArea}>

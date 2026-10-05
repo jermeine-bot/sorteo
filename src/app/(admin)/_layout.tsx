@@ -73,7 +73,6 @@ export default function AdminLayout() {
         }}
       />
 
-      {/* Hidden sub-routes inside admin navigation */}
       <Tabs.Screen name="prizes" options={{ href: null }} />
       <Tabs.Screen name="reports" options={{ href: null }} />
       <Tabs.Screen name="profile" options={{ href: null }} />

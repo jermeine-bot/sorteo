@@ -21,22 +21,17 @@ export default function SellerSalesScreen() {
   const [filter, setFilter] = useState<TimeFilter>('TODAY');
   const [search, setSearch] = useState('');
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
-
-  // Strictly fetch ONLY authenticated seller's sales
   const sellerSales = user ? getSalesBySeller(user.id) : [];
 
   const todayStr = new Date().toISOString().split('T')[0];
 
   const filteredSales = sellerSales.filter((sale) => {
-    // Search query filter
     const matchesSearch =
       sale.code.toLowerCase().includes(search.toLowerCase()) ||
       sale.number.includes(search) ||
       sale.raffleName.toLowerCase().includes(search.toLowerCase());
 
     if (!matchesSearch) return false;
-
-    // Time filter
     if (filter === 'TODAY') {
       return sale.date === todayStr;
     }
@@ -46,7 +41,7 @@ export default function SellerSalesScreen() {
       return sale.date === yesterday.toISOString().split('T')[0];
     }
     if (filter === 'WEEK') {
-      return true; // Simple week filter
+      return true; 
     }
 
     return true;
@@ -67,7 +62,6 @@ export default function SellerSalesScreen() {
           onClose={() => setSelectedSale(null)}
         />
 
-        {/* Time Filter Chips */}
         <View style={styles.filterRow}>
           {(['TODAY', 'YESTERDAY', 'WEEK', 'ALL'] as const).map((f) => (
             <TouchableOpacity

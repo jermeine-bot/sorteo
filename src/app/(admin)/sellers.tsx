@@ -12,7 +12,6 @@ import { colors, typography, spacing } from '../../theme';
 import { UserPlus, Search } from 'lucide-react-native';
 import { User } from '../../types/user';
 
-
 export default function SellersScreen() {
   const {
     sellers,
@@ -32,7 +31,6 @@ export default function SellersScreen() {
     fetchSellers();
   }, [fetchSellers]);
 
-  // filtro por nombre, usuario, segundo nombre, etc.
   const filteredSellers = sellers.filter(
     (s) =>
       s.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -40,10 +38,6 @@ export default function SellersScreen() {
       s.username.toLowerCase().includes(search.toLowerCase())
   );
 
-  // const handleCreateSeller = async (data: any) => {
-  //   await addSeller(data);
-  //   setToastMsg(`¡Vendedor ${data.name} creado correctamente!`);
-  // };
   const handleSaveSeller = async (data: any) => {
   if (selectedSeller) {
     await updateSeller(selectedSeller.id, {

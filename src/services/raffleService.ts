@@ -23,31 +23,31 @@ const mapRaffle = (row: any): Raffle => ({
 });
 
 export const raffleService = {
-
-  // get raffles
   async getRaffles(): Promise<Raffle[]> {
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
 
-    const { data, error } = await supabase
-      .from('raffles')
-      .select('*')
-      .order('created_at', { ascending: false });
+  console.log('👤 Usuario actual:', user?.id);
+  console.log('🔐 Error de autenticación:', authError);
 
-    if (error) {
-      console.error(
-        'Error obteniendo sorteos:',
-        error
-      );
+  const { data, error } = await supabase
+    .from('raffles')
+    .select('*')
+    .order('created_at', { ascending: false });
 
-      throw new Error(
-        error.message ||
-        'No se pudieron obtener los sorteos.'
-      );
-    }
+  if (error) {
+    console.error('❌ Error obteniendo sorteos:', error);
+    throw new Error(
+      error.message ||
+      'No se pudieron obtener los sorteos.'
+    );
+  }
 
     return (data ?? []).map(mapRaffle);
   },
 
-  // get data
   async getActiveRaffles(): Promise<Raffle[]> {
 
     const { data, error } = await supabase
@@ -71,7 +71,6 @@ export const raffleService = {
     return (data ?? []).map(mapRaffle);
   },
 
-  // Create Raffle
   async createRaffle(
     raffleData: Omit<
       Raffle,
@@ -130,8 +129,6 @@ export const raffleService = {
     return mapRaffle(data);
   },
 
-  // Update Raffle
-
   async updateRaffle(
     id: string,
     updates: Partial<Raffle>
@@ -188,18 +185,15 @@ export const raffleService = {
       updateData.status = updates.status;
     }
 
-    // Boletos ilimitados
     if (updates.isUnlimitedTickets !== undefined) {
       updateData.is_unlimited_tickets =
         updates.isUnlimitedTickets;
 
-      // Si es ilimitado, la capacidad debe ser 0
       if (updates.isUnlimitedTickets === true) {
         updateData.total_tickets = 0;
       }
     }
 
-    // Solo actualizar totalTickets cuando NO sea ilimitado
     if (
       updates.totalTickets !== undefined &&
       updates.isUnlimitedTickets !== true
@@ -216,7 +210,6 @@ export const raffleService = {
         updates.winningNumber;
     }
 
-    // Evitar UPDATE vacío
     if (Object.keys(updateData).length === 0) {
       throw new Error(
         'No hay cambios para actualizar.'
@@ -245,21 +238,17 @@ export const raffleService = {
     return mapRaffle(data);
   },
 
-  // delete Raffle
   async deleteRaffle(id: string): Promise<void> {
-
     const { error } = await supabase
       .from('raffles')
       .delete()
       .eq('id', id);
 
     if (error) {
-
       console.error(
         'Error eliminando sorteo:',
         error
       );
-
       throw new Error(
         error.message ||
         'No se pudo eliminar el sorteo.'

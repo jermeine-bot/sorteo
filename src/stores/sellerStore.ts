@@ -41,9 +41,6 @@ export const useSellerStore = create<SellerState>((set) => ({
   isLoading: false,
   error: null,
 
-  // ============================================================
-  // OBTENER VENDEDORES
-  // ============================================================
   fetchSellers: async () => {
     set({
       isLoading: true,
@@ -74,9 +71,6 @@ export const useSellerStore = create<SellerState>((set) => ({
     }
   },
 
-  // ============================================================
-  // CREAR VENDEDOR
-  // ============================================================
   addSeller: async (sellerData) => {
     set({
       isLoading: true,
@@ -116,9 +110,6 @@ export const useSellerStore = create<SellerState>((set) => ({
     }
   },
 
-  // ============================================================
-  // EDITAR VENDEDOR
-  // ============================================================
   updateSeller: async (
     id,
     sellerData
@@ -164,9 +155,6 @@ export const useSellerStore = create<SellerState>((set) => ({
     }
   },
 
-  // ============================================================
-  // CAMBIAR CONTRASEÑA DEL VENDEDOR
-  // ============================================================
   changeSellerPassword: async (
     sellerId,
     newPassword
@@ -203,9 +191,6 @@ export const useSellerStore = create<SellerState>((set) => ({
     }
   },
 
-  // ============================================================
-  // ACTIVAR / DESACTIVAR VENDEDOR
-  // ============================================================
   toggleSellerActive: async (id) => {
     set({
       isLoading: true,

@@ -6,7 +6,6 @@ const supabaseServiceRoleKey = Deno.env.get(
   'SUPABASE_SERVICE_ROLE_KEY'
 )!;
 
-// Cliente para validar al usuario autenticado
 const supabase = createClient(
   supabaseUrl,
   supabaseAnonKey,
@@ -18,8 +17,6 @@ const supabase = createClient(
   }
 );
 
-// Cliente administrativo.
-// Esta clave solamente existe dentro de Supabase Edge Functions.
 const supabaseAdmin = createClient(
   supabaseUrl,
   supabaseServiceRoleKey,
@@ -53,10 +50,6 @@ function jsonResponse(
 }
 
 Deno.serve(async (req: Request) => {
-  // --------------------------------------------------
-  // 1. Resolver solicitud CORS del navegador
-  // --------------------------------------------------
-
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
       status: 200,
@@ -75,10 +68,7 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    // --------------------------------------------------
-    // 2. Obtener token enviado por Supabase Auth
-    // --------------------------------------------------
-
+  
     const authorizationHeader =
       req.headers.get('Authorization');
 
@@ -109,10 +99,6 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // --------------------------------------------------
-    // 3. Validar usuario autenticado
-    // --------------------------------------------------
-
     const {
       data: { user },
       error: userError,
@@ -135,10 +121,6 @@ Deno.serve(async (req: Request) => {
     }
 
     const adminUserId = user.id;
-
-    // --------------------------------------------------
-    // 4. Verificar que el usuario sea ADMIN activo
-    // --------------------------------------------------
 
     const {
       data: adminProfile,
@@ -178,10 +160,6 @@ Deno.serve(async (req: Request) => {
         403
       );
     }
-
-    // --------------------------------------------------
-    // 5. Leer y validar datos enviados
-    // --------------------------------------------------
 
     let body: {
       sellerId?: unknown;
@@ -244,10 +222,6 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // --------------------------------------------------
-    // 6. Verificar que el objetivo sea SELLER
-    // --------------------------------------------------
-
     const {
       data: sellerProfile,
       error: sellerError,
@@ -283,10 +257,6 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // --------------------------------------------------
-    // 7. Actualizar contraseña en Supabase Auth
-    // --------------------------------------------------
-
     const {
       error: passwordError,
     } =
@@ -312,10 +282,6 @@ Deno.serve(async (req: Request) => {
         500
       );
     }
-
-    // --------------------------------------------------
-    // 8. Respuesta exitosa
-    // --------------------------------------------------
 
     return jsonResponse({
       success: true,

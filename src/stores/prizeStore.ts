@@ -27,8 +27,6 @@ export const usePrizeStore = create<PrizeState>((set) => ({
   isLoading: false,
 
   error: null,
-
-  // Obtener premios desde Supabase
   fetchPrizes: async () => {
 
     set({
@@ -56,7 +54,6 @@ export const usePrizeStore = create<PrizeState>((set) => ({
     }
   },
 
-  // Registrar ganador
   registerWinner: async (
     raffleId,
     raffleName,
@@ -104,9 +101,7 @@ export const usePrizeStore = create<PrizeState>((set) => ({
     }
   },
 
-  // Marcar premio como pagado
   markAsPaid: async (id) => {
-
     set({
       isLoading: true,
       error: null,

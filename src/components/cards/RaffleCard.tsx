@@ -55,7 +55,6 @@ export const RaffleCard: React.FC<RaffleCardProps> = ({
         <MoneyText amount={raffle.prizeAmount} size="md" color={colors.accentGold} />
       </View>
 
-      {/* Schedule Info */}
       <View style={styles.scheduleBox}>
         <View style={styles.scheduleCol}>
           <Text style={styles.scheduleLabel}>INICIO VENTA</Text>
@@ -80,7 +79,6 @@ export const RaffleCard: React.FC<RaffleCardProps> = ({
         </View>
       </View>
 
-      {/* Bottom Info Row: Ticket Capacity & Price */}
       <View style={styles.detailsRow}>
         <View style={styles.detailItem}>
           <Ticket size={14} color={colors.secondary} />
@@ -95,7 +93,6 @@ export const RaffleCard: React.FC<RaffleCardProps> = ({
         </View>
       </View>
 
-      {/* Admin Action Buttons or custom actionButtons */}
       {(onEdit || onDelete || actionButtons) && (
         <View style={styles.actionsContainer}>
           <View style={styles.adminActionGroup}>

@@ -144,28 +144,6 @@ export default function LoginScreen() {
               size="lg"
               style={styles.loginBtn}
             />
-
-            {/* Quick Demo Access Pills */}
-            {/* <View style={styles.mockSection}>
-              <Text style={styles.mockLabel}>Acceso rápido para pruebas:</Text>
-              <View style={styles.pillsRow}>
-                <TouchableOpacity
-                  style={[styles.pill, styles.pillAdmin]}
-                  onPress={() => fillQuickMock('admin')}
-                >
-                  <ShieldCheck size={14} color={colors.primary} />
-                  <Text style={styles.pillAdminText}>Admin Demo</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.pill, styles.pillSeller]}
-                  onPress={() => fillQuickMock('seller')}
-                >
-                  <Tag size={14} color={colors.secondary} />
-                  <Text style={styles.pillSellerText}>Vendedor Demo</Text>
-                </TouchableOpacity>
-              </View>
-            </View> */}
           </View>
 
          

@@ -93,10 +93,6 @@ export const SellerModal: React.FC<SellerModalProps> = ({
     },
   });
 
-  /**
-   * Cargar los datos del vendedor cuando se abre
-   * el modal en modo edición.
-   */
   useEffect(() => {
     if (visible) {
       reset({
@@ -124,8 +120,6 @@ export const SellerModal: React.FC<SellerModalProps> = ({
       return;
     }
 
-    // Al editar, la contraseña es opcional.
-    // Si está vacía, no se modificará.
     const cleanedData = {
       ...data,
       email: data.email.trim().toLowerCase(),
@@ -210,8 +204,6 @@ export const SellerModal: React.FC<SellerModalProps> = ({
                     />
                   )}
                 />
-
-                {/* NUEVO: Correo electrónico */} 
                 <Controller control={control} name="email" render={({ field: { onChange, value } }) => ( <AppInput label="Correo Electrónico" placeholder="carlos@example.com" keyboardType="email-address" autoCapitalize="none" autoCorrect={false} value={value} onChangeText={onChange} error={errors.email?.message} /> )} />
 
                 <Controller

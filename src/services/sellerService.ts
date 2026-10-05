@@ -11,8 +11,11 @@ export interface CreateSellerData {
   commissionPercentage: number;
 }
 
-// Convierte un registro de profiles al tipo User de la aplicación
-const mapProfileToUser = (profile: any): User => ({
+const mapProfileToUser = (
+  profile: any,
+  dailySales = 0,
+  totalSales = 0
+): User => ({
   id: profile.id,
   name: profile.name,
   lastName: profile.last_name,
@@ -24,43 +27,171 @@ const mapProfileToUser = (profile: any): User => ({
   commissionPercentage: Number(
     profile.commission_percentage ?? 0
   ),
-  dailySales: 0,
-  totalSales: 0,
+  dailySales,
+  totalSales,
   createdAt: profile.created_at,
 });
 
 export const sellerService = {
-  // ============================================================
-  // OBTENER VENDEDORES
-  // ============================================================
   async getSellers(): Promise<User[]> {
     console.log('Buscando vendedores en Supabase...');
-
-    const { data, error } = await supabase
+    const {
+      data: profiles,
+      error: profilesError,
+    } = await supabase
       .from('profiles')
       .select('*')
       .eq('role', 'SELLER')
-      .order('created_at', { ascending: false });
+      .order('created_at', {
+        ascending: false,
+      });
 
-    console.log('Vendedores obtenidos:', data);
-    console.log('Error vendedores:', error);
+    console.log(
+      'Vendedores obtenidos:',
+      profiles
+    );
 
-    if (error) {
+    console.log(
+      'Error vendedores:',
+      profilesError
+    );
+
+    if (profilesError) {
       throw new Error(
-        `No se pudieron obtener los vendedores: ${error.message}`
+        `No se pudieron obtener los vendedores: ${profilesError.message}`
       );
     }
 
-    return (data ?? []).map(mapProfileToUser);
+    if (!profiles || profiles.length === 0) {
+      return [];
+    }
+
+    const sellerIds = profiles.map(
+      (profile) => profile.id
+    );
+
+    console.log(
+      'IDs de vendedores:',
+      sellerIds
+    );
+    const {
+      data: sales,
+      error: salesError,
+    } = await supabase
+      .from('sales')
+      .select(
+        'seller_id, amount, created_at, status'
+      )
+      .in('seller_id', sellerIds)
+      .eq('status', 'CONFIRMED');
+
+    console.log(
+      'Ventas confirmadas de vendedores:',
+      sales
+    );
+
+    console.log(
+      'Error ventas vendedores:',
+      salesError
+    );
+
+    if (salesError) {
+      throw new Error(
+        `No se pudieron obtener las ventas de los vendedores: ${salesError.message}`
+      );
+    }
+
+    const now = new Date();
+
+    const nicaraguaDate =
+      new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Managua',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(now);
+
+    console.log(
+      'Fecha actual en Nicaragua:',
+      nicaraguaDate
+    );
+
+    const salesBySeller: Record<
+      string,
+      {
+        dailySales: number;
+        totalSales: number;
+      }
+    > = {};
+
+    sellerIds.forEach((sellerId) => {
+      salesBySeller[sellerId] = {
+        dailySales: 0,
+        totalSales: 0,
+      };
+    });
+
+    (sales ?? []).forEach((sale) => {
+      const sellerId = sale.seller_id;
+
+      if (!salesBySeller[sellerId]) {
+        salesBySeller[sellerId] = {
+          dailySales: 0,
+          totalSales: 0,
+        };
+      }
+
+      const amount = Number(sale.amount) || 0;
+      salesBySeller[sellerId].totalSales += amount;
+
+      const saleDate =
+        new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'America/Managua',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        }).format(
+          new Date(sale.created_at)
+        );
+
+      if (saleDate === nicaraguaDate) {
+        salesBySeller[sellerId].dailySales += amount;
+      }
+    });
+    console.log(
+      '📊 Estadísticas de vendedores:',
+      salesBySeller
+    );
+    return profiles.map((profile) => {
+      const stats =
+        salesBySeller[profile.id] ?? {
+          dailySales: 0,
+          totalSales: 0,
+        };
+
+      console.log(
+        `📊 Vendedor ${profile.name} ${profile.last_name}:`,
+        {
+          dailySales: stats.dailySales,
+          totalSales: stats.totalSales,
+        }
+      );
+
+      return mapProfileToUser(
+        profile,
+        stats.dailySales,
+        stats.totalSales
+      );
+    });
   },
 
-  // ============================================================
-  // CREAR VENDEDOR
-  // ============================================================
   async createSeller(
     sellerData: CreateSellerData
   ): Promise<User> {
-    console.log('Creando vendedor mediante Edge Function...');
+    console.log(
+      'Creando vendedor mediante Edge Function...'
+    );
+
     console.log('Datos del vendedor:', {
       name: sellerData.name,
       lastName: sellerData.lastName,
@@ -72,18 +203,29 @@ export const sellerService = {
       // No mostramos la contraseña en consola
     });
 
-    // Validaciones básicas antes de enviar los datos
     const name = sellerData.name.trim();
-    const lastName = sellerData.lastName.trim();
-    const username = sellerData.username.trim();
-    const email = sellerData.email.trim().toLowerCase();
-    const phone = sellerData.phone.trim();
-    const password = sellerData.password;
+    const lastName =
+      sellerData.lastName.trim();
+    const username =
+      sellerData.username.trim();
+    const email =
+      sellerData.email.trim().toLowerCase();
+    const phone =
+      sellerData.phone.trim();
+    const password =
+      sellerData.password;
+
     const commissionPercentage = Number(
       sellerData.commissionPercentage
     );
 
-    if (!name || !lastName || !username || !email || !phone) {
+    if (
+      !name ||
+      !lastName ||
+      !username ||
+      !email ||
+      !phone
+    ) {
       throw new Error(
         'Todos los campos obligatorios deben estar completos.'
       );
@@ -96,7 +238,9 @@ export const sellerService = {
     }
 
     if (
-      !Number.isFinite(commissionPercentage) ||
+      !Number.isFinite(
+        commissionPercentage
+      ) ||
       commissionPercentage < 0 ||
       commissionPercentage > 50
     ) {
@@ -105,26 +249,23 @@ export const sellerService = {
       );
     }
 
-    // Llamamos a la Edge Function.
-    // La función será la encargada de:
-    // 1. Verificar que el usuario actual sea ADMIN.
-    // 2. Crear el usuario en Supabase Auth.
-    // 3. Crear su registro en profiles.
-    const { data, error } =
-      await supabase.functions.invoke(
-        'create-seller',
-        {
-          body: {
-            name,
-            lastName,
-            username,
-            email,
-            phone,
-            password,
-            commissionPercentage,
-          },
-        }
-      );
+    const {
+      data,
+      error,
+    } = await supabase.functions.invoke(
+      'create-seller',
+      {
+        body: {
+          name,
+          lastName,
+          username,
+          email,
+          phone,
+          password,
+          commissionPercentage,
+        },
+      }
+    );
 
     console.log(
       '📦 Respuesta creación vendedor:',
@@ -141,13 +282,26 @@ export const sellerService = {
         '🔴 Error en Edge Function create-seller:',
         error
       );
-      console.log('🔴 Nombre del error:', error.name);
-      console.log('🔴 Mensaje:', error.message);
-      console.log('🔴 Contexto:', error.context);
+
+      console.log(
+        '🔴 Nombre del error:',
+        error.name
+      );
+
+      console.log(
+        '🔴 Mensaje:',
+        error.message
+      );
+
+      console.log(
+        '🔴 Contexto:',
+        error.context
+      );
 
       if (error.context) {
         try {
-          const responseBody = await error.context.text();
+          const responseBody =
+            await error.context.text();
 
           console.log(
             '🔴 RESPUESTA REAL DE CREATE-SELLER:',
@@ -184,12 +338,11 @@ export const sellerService = {
       data.seller
     );
 
-    return mapProfileToUser(data.seller);
+    return mapProfileToUser(
+      data.seller
+    );
   },
 
-  // ============================================================
-  // EDITAR VENDEDOR
-  // ============================================================
   async updateSeller(
     sellerId: string,
     sellerData: {
@@ -205,36 +358,48 @@ export const sellerService = {
       'Actualizando vendedor mediante Edge Function:',
       sellerId
     );
-
-    // Limpiamos y normalizamos los datos antes de enviarlos.
     const name = sellerData.name.trim();
-    const lastName = sellerData.lastName.trim();
-    const username = sellerData.username.trim();
-    const email = sellerData.email.trim().toLowerCase();
-    const phone = sellerData.phone.trim();
+    const lastName =
+      sellerData.lastName.trim();
+    const username =
+      sellerData.username.trim();
+    const email =
+      sellerData.email.trim().toLowerCase();
+    const phone =
+      sellerData.phone.trim();
+
     const commissionPercentage = Number(
       sellerData.commissionPercentage
     );
 
-    console.log('📤 Datos enviados a update-seller:', {
-      name,
-      lastName,
-      username,
-      email,
-      phone,
-      commissionPercentage,
-    });
+    console.log(
+      '📤 Datos enviados a update-seller:',
+      {
+        name,
+        lastName,
+        username,
+        email,
+        phone,
+        commissionPercentage,
+      }
+    );
 
-    // Validaciones básicas del lado del cliente.
-    // La Edge Function también debe validarlos del lado del servidor.
-    if (!name || !lastName || !username || !email || !phone) {
+    if (
+      !name ||
+      !lastName ||
+      !username ||
+      !email ||
+      !phone
+    ) {
       throw new Error(
         'Todos los campos obligatorios deben estar completos.'
       );
     }
 
     if (
-      !Number.isFinite(commissionPercentage) ||
+      !Number.isFinite(
+        commissionPercentage
+      ) ||
       commissionPercentage < 0 ||
       commissionPercentage > 50
     ) {
@@ -243,28 +408,23 @@ export const sellerService = {
       );
     }
 
-    // La Edge Function update-seller será responsable de:
-    // 1. Verificar que el usuario actual sea ADMIN.
-    // 2. Verificar que el usuario objetivo sea SELLER.
-    // 3. Validar los datos.
-    // 4. Actualizar auth.users.email.
-    // 5. Actualizar profiles.email y demás datos.
-    // 6. Mantener ambos correos sincronizados.
-    const { data, error } =
-      await supabase.functions.invoke(
-        'update-seller',
-        {
-          body: {
-            sellerId,
-            name,
-            lastName,
-            username,
-            email,
-            phone,
-            commissionPercentage,
-          },
-        }
-      );
+    const {
+      data,
+      error,
+    } = await supabase.functions.invoke(
+      'update-seller',
+      {
+        body: {
+          sellerId,
+          name,
+          lastName,
+          username,
+          email,
+          phone,
+          commissionPercentage,
+        },
+      }
+    );
 
     console.log(
       '📦 Respuesta actualización vendedor:',
@@ -281,21 +441,22 @@ export const sellerService = {
         '🔴 Error en Edge Function update-seller:',
         error
       );
+
       console.log(
         '🔴 Nombre del error:',
         error.name
       );
+
       console.log(
         '🔴 Mensaje:',
         error.message
       );
+
       console.log(
         '🔴 Contexto:',
         error.context
       );
 
-      // Intentamos leer el cuerpo real que devolvió
-      // la Edge Function.
       if (error.context) {
         try {
           const responseBody =
@@ -307,7 +468,7 @@ export const sellerService = {
           );
         } catch (readError) {
           console.log(
-            '⚠️ No se pudo leer la respuesta de la Edge Function:',
+            '⚠️ No se pudo leer el cuerpo del error:',
             readError
           );
         }
@@ -336,12 +497,11 @@ export const sellerService = {
       data.seller
     );
 
-    return mapProfileToUser(data.seller);
+    return mapProfileToUser(
+      data.seller
+    );
   },
 
-  // ============================================================
-  // CAMBIAR CONTRASEÑA
-  // ============================================================
   async changeSellerPassword(
     sellerId: string,
     newPassword: string
@@ -367,16 +527,18 @@ export const sellerService = {
       sessionData.session?.user?.email
     );
 
-    const { data, error } =
-      await supabase.functions.invoke(
-        'change-seller-password',
-        {
-          body: {
-            sellerId,
-            newPassword,
-          },
-        }
-      );
+    const {
+      data,
+      error,
+    } = await supabase.functions.invoke(
+      'change-seller-password',
+      {
+        body: {
+          sellerId,
+          newPassword,
+        },
+      }
+    );
 
     console.log(
       '📦 Respuesta cambio contraseña:',
@@ -404,8 +566,6 @@ export const sellerService = {
         error.context
       );
 
-      // Intentamos leer el cuerpo real
-      // que devolvió la Edge Function
       if (error.context) {
         try {
           const responseBody =
@@ -440,9 +600,6 @@ export const sellerService = {
     );
   },
 
-  // ============================================================
-  // ACTIVAR / DESACTIVAR VENDEDOR
-  // ============================================================
   async toggleSellerStatus(
     sellerId: string
   ): Promise<boolean> {
@@ -451,13 +608,15 @@ export const sellerService = {
       sellerId
     );
 
-    const { data: seller, error: getError } =
-      await supabase
-        .from('profiles')
-        .select('active')
-        .eq('id', sellerId)
-        .eq('role', 'SELLER')
-        .single();
+    const {
+      data: seller,
+      error: getError,
+    } = await supabase
+      .from('profiles')
+      .select('active')
+      .eq('id', sellerId)
+      .eq('role', 'SELLER')
+      .single();
 
     if (getError) {
       throw new Error(
@@ -473,14 +632,15 @@ export const sellerService = {
 
     const newStatus = !seller.active;
 
-    const { error: updateError } =
-      await supabase
-        .from('profiles')
-        .update({
-          active: newStatus,
-        })
-        .eq('id', sellerId)
-        .eq('role', 'SELLER');
+    const {
+      error: updateError,
+    } = await supabase
+      .from('profiles')
+      .update({
+        active: newStatus,
+      })
+      .eq('id', sellerId)
+      .eq('role', 'SELLER');
 
     if (updateError) {
       throw new Error(
@@ -496,4 +656,3 @@ export const sellerService = {
     return newStatus;
   },
 };
-

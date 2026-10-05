@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -29,10 +29,46 @@ import { formatCurrency } from '../../utils/currency';
 export default function AdminDashboard() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const { sales, getTodaySalesAmount, getTodaySalesCount } = useSaleStore();
-  const { getActiveRaffle, createRaffle } = useRaffleStore();
-  const { sellers } = useSellerStore();
-  const { prizes, registerWinner } = usePrizeStore();
+  const {
+    sales,
+    getTodaySalesAmount,
+    getTodaySalesCount,
+    fetchSales,
+  } = useSaleStore();
+
+  const {
+    getActiveRaffle,
+    createRaffle,
+    fetchRaffles,
+  } = useRaffleStore();
+
+  const {
+    sellers,
+    fetchSellers,
+  } = useSellerStore();
+
+  const {
+    prizes,
+    registerWinner,
+    fetchPrizes,
+  } = usePrizeStore();
+
+  useEffect(() => {
+    const loadDashboard = async () => {
+      try {
+        await Promise.all([
+          fetchSales(),
+          fetchRaffles(),
+          fetchSellers(),
+          fetchPrizes(),
+        ]);
+      } catch (error) {
+        console.error('❌ Error cargando datos del dashboard:', error);
+      }
+    };
+
+    loadDashboard();
+  }, [fetchSales, fetchRaffles, fetchSellers, fetchPrizes]);
 
   const [createRaffleModal, setCreateRaffleModal] = useState(false);
   const [winnerModal, setWinnerModal] = useState(false);

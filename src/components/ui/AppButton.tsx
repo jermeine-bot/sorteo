@@ -37,12 +37,10 @@ export const AppButton: React.FC<AppButtonProps> = ({
   const getContainerStyle = (): ViewStyle => {
     let base: ViewStyle = styles.base;
 
-    // Size
     if (size === 'sm') base = { ...base, paddingVertical: spacing.xs + 2, paddingHorizontal: spacing.md };
     else if (size === 'lg') base = { ...base, paddingVertical: spacing.lg, paddingHorizontal: spacing.xl };
     else base = { ...base, paddingVertical: spacing.sm + 4, paddingHorizontal: spacing.lg };
 
-    // Variant
     switch (variant) {
       case 'primary':
         return {

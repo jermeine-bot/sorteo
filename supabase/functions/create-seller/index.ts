@@ -19,9 +19,6 @@ const supabaseAdmin = createClient(
 );
 
 Deno.serve(async (req) => {
-  // ============================================================
-  // CORS
-  // ============================================================
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
       headers: corsHeaders,
@@ -45,9 +42,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // ============================================================
-    // 1. OBTENER TOKEN DEL ADMIN
-    // ============================================================
+    
     const authHeader =
       req.headers.get('Authorization');
 
@@ -90,9 +85,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // ============================================================
-    // 2. VERIFICAR USUARIO AUTENTICADO
-    // ============================================================
     const {
       data: userData,
       error: userError,
@@ -128,9 +120,6 @@ Deno.serve(async (req) => {
       authenticatedUser.email
     );
 
-    // ============================================================
-    // 3. VERIFICAR QUE EL USUARIO SEA ADMIN
-    // ============================================================
     const {
       data: adminProfile,
       error: profileError,
@@ -188,9 +177,6 @@ Deno.serve(async (req) => {
       '✅ Usuario autorizado como ADMIN'
     );
 
-    // ============================================================
-    // 4. LEER DATOS DEL VENDEDOR
-    // ============================================================
     const body = await req.json();
 
     const {
@@ -203,9 +189,6 @@ Deno.serve(async (req) => {
       commissionPercentage,
     } = body;
 
-    // ============================================================
-    // 5. VALIDACIONES
-    // ============================================================
     if (
       typeof name !== 'string' ||
       typeof lastName !== 'string' ||
@@ -317,7 +300,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Validación básica de email
     const emailRegex =
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -376,9 +358,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // ============================================================
-    // 6. COMPROBAR USERNAME DUPLICADO
-    // ============================================================
     const {
       data: existingUsername,
       error: usernameError,
@@ -427,9 +406,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // ============================================================
-    // 7. CREAR USUARIO EN SUPABASE AUTH
-    // ============================================================
     console.log(
       'Creando usuario Auth:',
       cleanEmail
@@ -493,9 +469,6 @@ Deno.serve(async (req) => {
       newUser.id
     );
 
-    // ============================================================
-    // 8. CREAR PROFILE DEL VENDEDOR
-    // ============================================================
     const {
       data: newProfile,
       error: newProfileError,
@@ -516,9 +489,6 @@ Deno.serve(async (req) => {
       .select('*')
       .single();
 
-    // ============================================================
-    // 9. ROLLBACK SI FALLA PROFILES
-    // ============================================================
     if (newProfileError || !newProfile) {
       console.error(
         '❌ ERROR COMPLETO CREANDO PROFILE:',
@@ -590,9 +560,6 @@ Deno.serve(async (req) => {
       '✅ Profile del vendedor creado correctamente.'
     );
 
-    // ============================================================
-    // 10. RESPUESTA
-    // ============================================================
     return new Response(
       JSON.stringify({
         success: true,

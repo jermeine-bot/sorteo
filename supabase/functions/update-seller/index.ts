@@ -6,10 +6,6 @@ const supabaseServiceRoleKey = Deno.env.get(
   'SUPABASE_SERVICE_ROLE_KEY'
 )!;
 
-// --------------------------------------------------
-// Cliente para validar al usuario autenticado
-// --------------------------------------------------
-
 const supabase = createClient(
   supabaseUrl,
   supabaseAnonKey,
@@ -20,10 +16,6 @@ const supabase = createClient(
     },
   }
 );
-
-// --------------------------------------------------
-// Cliente administrativo
-// --------------------------------------------------
 
 const supabaseAdmin = createClient(
   supabaseUrl,
@@ -36,10 +28,6 @@ const supabaseAdmin = createClient(
   }
 );
 
-// --------------------------------------------------
-// CORS
-// --------------------------------------------------
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
@@ -47,10 +35,6 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Content-Type': 'application/json',
 };
-
-// --------------------------------------------------
-// Respuesta JSON
-// --------------------------------------------------
 
 function jsonResponse(
   body: Record<string, unknown>,
@@ -65,25 +49,13 @@ function jsonResponse(
   );
 }
 
-// --------------------------------------------------
-// Edge Function
-// --------------------------------------------------
-
 Deno.serve(async (req: Request) => {
-  // --------------------------------------------------
-  // 1. CORS
-  // --------------------------------------------------
-
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
       status: 200,
       headers: corsHeaders,
     });
   }
-
-  // --------------------------------------------------
-  // 2. Validar método
-  // --------------------------------------------------
 
   if (req.method !== 'POST') {
     return jsonResponse(
@@ -96,10 +68,6 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    // --------------------------------------------------
-    // 3. Obtener Authorization
-    // --------------------------------------------------
-
     const authorizationHeader =
       req.headers.get('Authorization');
 
@@ -129,10 +97,6 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // --------------------------------------------------
-    // 4. Validar usuario autenticado
-    // --------------------------------------------------
-
     const {
       data: { user },
       error: userError,
@@ -155,10 +119,6 @@ Deno.serve(async (req: Request) => {
     }
 
     const adminUserId = user.id;
-
-    // --------------------------------------------------
-    // 5. Verificar que sea ADMIN activo
-    // --------------------------------------------------
 
     const {
       data: adminProfile,
@@ -199,10 +159,6 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // --------------------------------------------------
-    // 6. Leer body
-    // --------------------------------------------------
-
     let body: {
       sellerId?: unknown;
       name?: unknown;
@@ -225,11 +181,6 @@ Deno.serve(async (req: Request) => {
         400
       );
     }
-
-    // --------------------------------------------------
-    // 7. Validar sellerId
-    // --------------------------------------------------
-
     const sellerId = body.sellerId;
 
     if (
@@ -245,10 +196,6 @@ Deno.serve(async (req: Request) => {
         400
       );
     }
-
-    // --------------------------------------------------
-    // 8. Validar campos
-    // --------------------------------------------------
 
     if (
       typeof body.name !== 'string' ||
@@ -276,10 +223,6 @@ Deno.serve(async (req: Request) => {
     const commissionPercentage = Number(
       body.commissionPercentage
     );
-
-    // --------------------------------------------------
-    // 9. Validaciones específicas
-    // --------------------------------------------------
 
     if (name.length < 2) {
       return jsonResponse(
@@ -355,10 +298,6 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // --------------------------------------------------
-    // 10. Obtener vendedor actual
-    // --------------------------------------------------
-
     const {
       data: sellerProfile,
       error: sellerError,
@@ -386,10 +325,6 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // --------------------------------------------------
-    // 11. Confirmar que sea SELLER
-    // --------------------------------------------------
-
     if (sellerProfile.role !== 'SELLER') {
       return jsonResponse(
         {
@@ -400,10 +335,6 @@ Deno.serve(async (req: Request) => {
         400
       );
     }
-
-    // --------------------------------------------------
-    // 12. Verificar username único
-    // --------------------------------------------------
 
     const {
       data: usernameExists,
@@ -442,10 +373,6 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // --------------------------------------------------
-    // 13. Obtener correo actual de Supabase Auth
-    // --------------------------------------------------
-
     const {
       data: authUserData,
       error: authUserError,
@@ -475,11 +402,6 @@ Deno.serve(async (req: Request) => {
 
     const currentAuthEmail =
       authUserData.user.email ?? '';
-
-    // --------------------------------------------------
-    // 14. Actualizar correo en Supabase Auth
-    //    solamente si realmente cambió
-    // --------------------------------------------------
 
     const emailChanged =
       currentAuthEmail.toLowerCase() !== email;
@@ -521,10 +443,6 @@ Deno.serve(async (req: Request) => {
         );
       }
     }
-
-    // --------------------------------------------------
-    // 15. Actualizar perfil
-    // --------------------------------------------------
 
     const {
       data: updatedProfile,
@@ -575,10 +493,6 @@ Deno.serve(async (req: Request) => {
     profileUpdateError?.hint
   );
 
-  // --------------------------------------------------
-  // Rollback del correo de Auth
-  // --------------------------------------------------
-
   if (emailChanged) {
     console.log(
       '🔄 Intentando rollback del correo de Auth...'
@@ -620,11 +534,6 @@ Deno.serve(async (req: Request) => {
     500
   );
 }
-    
-
-    // --------------------------------------------------
-    // 17. Respuesta exitosa
-    // --------------------------------------------------
 
     console.log(
       '✅ Vendedor actualizado correctamente:',
